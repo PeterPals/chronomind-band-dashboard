@@ -240,7 +240,7 @@ export default function GoalsTab({
               Thiết lập Mục tiêu & Chỉ số Cụ thể
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-3xl">
-              Nhập chính xác con số bạn muốn chinh phục (VD: <span className="font-semibold">SAT 1560</span>, <span className="font-semibold">8.0 điểm Toán</span>, <span className="font-semibold">2 km chạy bộ mỗi ngày</span>). ChronoMind tự tính khoảng cách còn thiếu và điều chỉnh khối học/vận động vào đúng Khung giờ Vàng theo Điểm hồi phục ({morningRecovery}/100).
+              Nhập chính xác con số bạn muốn chinh phục. ChronoMind tự tính khoảng cách còn thiếu và điều chỉnh khối học/vận động vào đúng Khung giờ Vàng theo Điểm hồi phục ({morningRecovery}/100).
             </p>
           </div>
         </div>
