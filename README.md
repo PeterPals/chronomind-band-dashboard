@@ -1,6 +1,6 @@
 # ChronoMind Band Dashboard
 
-A React + Vite + Tailwind CSS web application for **ChronoMind Band S2** — a student-centered biometric, sleep cycle, circadian study planner, and privacy-first parent companion dashboard.
+A React + Vite + Tailwind CSS web application for **ChronoMind Band** — a student-centered biometric, sleep cycle, circadian study planner, and privacy-first parent companion dashboard.
 
 ## Features
 
