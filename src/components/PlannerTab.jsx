@@ -6,6 +6,7 @@ import {
   Circle,
   Lock,
   Trash2,
+  Target,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -17,7 +18,8 @@ import {
   Tooltip,
   ReferenceArea,
 } from 'recharts';
-import { CATEGORY_META, SEMESTER_GOALS } from '../data/mockData';
+import { CATEGORY_META } from '../data/mockData';
+import { getGoalMetrics, formatMetricValue } from '../utils/goalScheduler';
 
 // ============================================================================
 // PHÂN HỆ C: LỊCH TRÌNH "THỜI ĐIỂM VÀNG" THEO NHỊP SINH HỌC
@@ -48,6 +50,8 @@ export default function PlannerTab({
   onAddTask,
   onToggleTaskDone,
   onDeleteTask,
+  goals = [],
+  onGoToGoals,
 }) {
   return (
     <div className="space-y-6">
@@ -196,12 +200,22 @@ export default function PlannerTab({
                 Tiến độ hoàn thành tổng thể: {overallProgress}% ({completedCount}/{tasks.length} mục tiêu tuần)
               </p>
             </div>
-            <button
-              onClick={() => setShowAddTask(!showAddTask)}
-              className="px-4 py-2.5 rounded-none bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5 self-start"
-            >
-              <Plus className="w-4 h-4" /> Thêm đầu việc mới
-            </button>
+            <div className="flex flex-wrap items-center gap-2 self-start">
+              {onGoToGoals && (
+                <button
+                  onClick={onGoToGoals}
+                  className="px-3.5 py-2.5 rounded-none bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition inline-flex items-center gap-1.5"
+                >
+                  <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Điều chỉnh mục tiêu ({goals.length})
+                </button>
+              )}
+              <button
+                onClick={() => setShowAddTask(!showAddTask)}
+                className="px-4 py-2.5 rounded-none bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" /> Thêm đầu việc mới
+              </button>
+            </div>
           </div>
 
           {showAddTask && (
@@ -286,6 +300,11 @@ export default function PlannerTab({
                         >
                           {meta.short}
                         </span>
+                        {task.isGoalGenerated && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-medium bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                            <Target className="w-3 h-3" /> Từ mục tiêu
+                          </span>
+                        )}
                         {task.protected && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-medium bg-amber-100/80 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300">
                             <Lock className="w-3 h-3" /> Khóa bảo vệ
@@ -421,42 +440,58 @@ export default function PlannerTab({
 
       {plannerView === 'semester' && (
         <div className="rounded-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-5">
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
-              Lộ trình Mục tiêu Dài hạn · Học kỳ I (Lớp 11 Chuyên)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              ChronoMind chia nhỏ khối lượng ôn thi thành các bước bền vững để bạn không bao giờ phải "học nhồi đêm trước kỳ thi"
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
+                Lộ trình Mục tiêu Dài hạn & Chỉ số Học kỳ
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Đồng bộ trực tiếp từ trang Mục tiêu & Chỉ số để chia nhỏ khối lượng ôn thi bền vững theo nhịp sinh học
+              </p>
+            </div>
+            {onGoToGoals && (
+              <button
+                onClick={onGoToGoals}
+                className="px-3.5 py-2 rounded-none bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5 self-start"
+              >
+                <Target className="w-3.5 h-3.5" /> Quản lý mục tiêu số
+              </button>
+            )}
           </div>
           <div className="space-y-4">
-            {SEMESTER_GOALS.map((goal) => (
-              <div
-                key={goal.id}
-                className="p-4 rounded-none bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <div className="font-bold text-sm text-slate-800 dark:text-slate-100">
-                    {goal.subject}
+            {goals.map((goal) => {
+              const metrics = getGoalMetrics(goal);
+              return (
+                <div
+                  key={goal.id}
+                  className="p-4 rounded-none bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div className="font-bold text-sm text-slate-800 dark:text-slate-100">
+                      {goal.title} · <span className="text-slate-500 dark:text-slate-400 font-medium">{goal.subject}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">
+                        {formatMetricValue(metrics.current)} / {formatMetricValue(metrics.target)} {goal.unit}
+                      </span>
+                      <span className="text-slate-500 dark:text-slate-400">Mốc: {goal.deadline}</span>
+                      <span className="px-2.5 py-0.5 rounded-none bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                        {goal.autoSync ? `${goal.sessionsPerWeek} buổi/tuần` : 'Tạm tắt lịch'}
+                      </span>
+                      <span className="font-bold" style={{ color: metrics.color }}>
+                        {metrics.progressPct}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Mốc thi: {goal.target}</span>
-                    <span className="px-2.5 py-0.5 rounded-none bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
-                      {goal.status}
-                    </span>
-                    <span className="font-bold" style={{ color: goal.color }}>
-                      {goal.progress}%
-                    </span>
+                  <div className="w-full h-2.5 rounded-none bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                    <div
+                      className="h-full rounded-none transition-all duration-700"
+                      style={{ width: `${metrics.progressPct}%`, backgroundColor: metrics.color }}
+                    />
                   </div>
                 </div>
-                <div className="w-full h-2.5 rounded-none bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full rounded-none transition-all duration-700"
-                    style={{ width: `${goal.progress}%`, backgroundColor: goal.color }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

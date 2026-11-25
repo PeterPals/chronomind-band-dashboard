@@ -18,6 +18,7 @@ import {
   Watch,
   Radio,
   Check,
+  Target,
 } from 'lucide-react';
 import {
   INITIAL_PPG_DATA,
@@ -26,15 +27,18 @@ import {
   SHORT_SLEEP_HYPNOGRAM,
   BASE_ENERGY_CURVE,
   INITIAL_TASKS,
+  INITIAL_GOALS,
   MOOD_OPTIONS,
   CATEGORY_META,
 } from './data/mockData';
 import { calculateSmartWakeWindow, getSharpTooltipStyle } from './utils/sleepCalculator';
+import { syncGoalsToTasks, formatMetricValue } from './utils/goalScheduler';
 import BreathingModal from './components/BreathingModal';
 import ParentCompanionView from './components/ParentCompanionView';
 import BiometricsTab from './components/BiometricsTab';
 import SleepTab from './components/SleepTab';
 import PlannerTab from './components/PlannerTab';
+import GoalsTab from './components/GoalsTab';
 import MoodTab from './components/MoodTab';
 import BandFeaturesTab from './components/BandFeaturesTab';
 
@@ -67,9 +71,12 @@ export default function App() {
   const [maxWakeTime, setMaxWakeTime] = useState('06:30');
   const [tomorrowPriority, setTomorrowPriority] = useState('normal'); // light | normal | high
 
-  // Phân hệ C: Lịch trình Golden Hours
+  // Phân hệ C: Lịch trình Golden Hours & Mục tiêu Định lượng
   const [plannerView, setPlannerView] = useState('day'); // day | week | month | semester
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [goals, setGoals] = useState(INITIAL_GOALS);
+  const [tasks, setTasks] = useState(
+    () => syncGoalsToTasks(INITIAL_TASKS, INITIAL_GOALS, 84, false).updatedTasks
+  );
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskSubject, setNewTaskSubject] = useState('Toán học');
   const [newTaskCategory, setNewTaskCategory] = useState('logic');
@@ -257,6 +264,83 @@ export default function App() {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // ============================================================================
+  // HÀNH ĐỘNG MỤC TIÊU ĐỊNH LƯỢNG & TỰ ĐỘNG ĐIỀU CHỈNH LỊCH TRÌNH
+  // ============================================================================
+  const applyGoalsToScheduler = (nextGoals, recovery = morningRecovery, deprived = sleepDeprived) => {
+    let generatedCount = 0;
+    setTasks((prev) => {
+      const result = syncGoalsToTasks(prev, nextGoals, recovery, deprived);
+      generatedCount = result.generatedCount;
+      return result.updatedTasks;
+    });
+    return generatedCount;
+  };
+
+  const handleSaveGoal = (goalPayload, isEdit) => {
+    const nextGoals = isEdit
+      ? goals.map((g) => (g.id === goalPayload.id ? goalPayload : g))
+      : [goalPayload, ...goals];
+    setGoals(nextGoals);
+    applyGoalsToScheduler(nextGoals);
+    showToast(
+      isEdit
+        ? `Đã cập nhật mục tiêu "${goalPayload.title}" và điều chỉnh lại Lịch Thời điểm vàng.`
+        : `Đã thêm mục tiêu "${goalPayload.title}" (${formatMetricValue(goalPayload.currentValue)} → ${formatMetricValue(goalPayload.targetValue)} ${goalPayload.unit}) và tự xếp lịch.`,
+      'emerald'
+    );
+  };
+
+  const handleUpdateGoalProgress = (goalId, nextValue) => {
+    const targetGoal = goals.find((g) => g.id === goalId);
+    const nextGoals = goals.map((g) =>
+      g.id === goalId ? { ...g, currentValue: nextValue } : g
+    );
+    setGoals(nextGoals);
+    applyGoalsToScheduler(nextGoals);
+    if (targetGoal) {
+      showToast(
+        `Đã cập nhật "${targetGoal.title}" lên ${formatMetricValue(nextValue)}/${formatMetricValue(targetGoal.targetValue)} ${targetGoal.unit} · Lịch trình đã tự cân đối lại.`,
+        'emerald'
+      );
+    }
+  };
+
+  const handleToggleGoalSync = (goalId) => {
+    const targetGoal = goals.find((g) => g.id === goalId);
+    const nextGoals = goals.map((g) =>
+      g.id === goalId ? { ...g, autoSync: !g.autoSync } : g
+    );
+    setGoals(nextGoals);
+    applyGoalsToScheduler(nextGoals);
+    if (targetGoal) {
+      showToast(
+        !targetGoal.autoSync
+          ? `Đã bật tự động xếp lịch cho "${targetGoal.title}".`
+          : `Đã tạm tắt đồng bộ lịch cho "${targetGoal.title}".`,
+        'blue'
+      );
+    }
+  };
+
+  const handleDeleteGoal = (goalId) => {
+    const targetGoal = goals.find((g) => g.id === goalId);
+    const nextGoals = goals.filter((g) => g.id !== goalId);
+    setGoals(nextGoals);
+    applyGoalsToScheduler(nextGoals);
+    if (targetGoal) {
+      showToast(`Đã xóa mục tiêu "${targetGoal.title}" và gỡ các phiên liên quan khỏi lịch.`, 'blue');
+    }
+  };
+
+  const handleResyncSchedule = () => {
+    applyGoalsToScheduler(goals);
+    showToast(
+      `Đã tái tối ưu toàn bộ lịch học & vận động từ ${goals.filter((g) => g.autoSync).length} mục tiêu theo Điểm hồi phục (${morningRecovery}/100).`,
+      'emerald'
+    );
+  };
+
   const handleToggleFocusMode = () => {
     const next = !focusMode;
     setFocusMode(next);
@@ -313,6 +397,7 @@ export default function App() {
       setLiveHr(79);
       setMorningRecovery(48);
       setSelectedMood('tired');
+      setTasks((prev) => syncGoalsToTasks(prev, goals, 48, true).updatedTasks);
       setActiveAlertModal({
         type: 'sleep',
         title: 'Đêm qua thiếu ngủ · HRV giảm còn 38 ms',
@@ -334,7 +419,8 @@ export default function App() {
       setMorningRecovery(84);
       setSittingMinutes(42);
       setSelectedMood('stable');
-      setTasks(INITIAL_TASKS);
+      setGoals(INITIAL_GOALS);
+      setTasks(syncGoalsToTasks(INITIAL_TASKS, INITIAL_GOALS, 84, false).updatedTasks);
       setRebalancedInfo(null);
       setPreviousTasksBackup(null);
       showToast('Đã khôi phục toàn bộ cảm biến về trạng thái sinh học cân bằng mặc định.', 'blue');
@@ -350,6 +436,7 @@ export default function App() {
   const navItems = [
     { id: 'biometrics', label: 'Trung tâm Sinh học', sub: 'PPG · Gia tốc · Hồi phục', icon: Activity },
     { id: 'sleep', label: 'Chu kỳ Giấc ngủ', sub: 'Chu kỳ 90p · Anti-Inertia', icon: Moon },
+    { id: 'goals', label: 'Mục tiêu & Chỉ số', sub: 'Điểm số · Thói quen', icon: Target },
     { id: 'planner', label: 'Lịch Thời điểm vàng', sub: 'Nhịp sinh học cá nhân', icon: Calendar },
     { id: 'mood', label: 'Trợ lý Tinh thần AI', sub: 'Cảm xúc · Auto-Rebalance', icon: Brain },
     { id: 'band', label: 'Điều khiển Vòng tay', sub: '5 tính năng cốt lõi', icon: Watch },
@@ -607,6 +694,21 @@ export default function App() {
                   )
                 }
               />
+            ) : activeTab === 'goals' ? (
+              <GoalsTab
+                goals={goals}
+                tasks={tasks}
+                morningRecovery={morningRecovery}
+                sleepDeprived={sleepDeprived}
+                darkMode={darkMode}
+                sharpTooltipStyle={sharpTooltipStyle}
+                onSaveGoal={handleSaveGoal}
+                onUpdateGoalProgress={handleUpdateGoalProgress}
+                onToggleGoalSync={handleToggleGoalSync}
+                onDeleteGoal={handleDeleteGoal}
+                onResyncSchedule={handleResyncSchedule}
+                onGoToPlanner={() => setActiveTab('planner')}
+              />
             ) : activeTab === 'planner' ? (
               <PlannerTab
                 rebalancedInfo={rebalancedInfo}
@@ -633,6 +735,8 @@ export default function App() {
                 onAddTask={handleAddTask}
                 onToggleTaskDone={toggleTaskDone}
                 onDeleteTask={deleteTask}
+                goals={goals}
+                onGoToGoals={() => setActiveTab('goals')}
               />
             ) : activeTab === 'mood' ? (
               <MoodTab
