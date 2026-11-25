@@ -26,7 +26,7 @@ export default function MoodTab({
               <HeartHandshake className="w-3.5 h-3.5" /> Check-in cảm xúc hằng ngày
             </span>
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">
-              Hôm nay tâm trạng của Ngọc Phan Châu Anh thế nào?
+              Hôm nay tâm trạng của Châu Anh thế nào?
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Mọi cảm xúc đều được lắng nghe không phán xét và hoàn toàn bảo mật riêng tư.

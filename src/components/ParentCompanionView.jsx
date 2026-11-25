@@ -25,7 +25,7 @@ export default function ParentCompanionView({
                 Chế độ Phụ huynh · Đồng hành tôn trọng quyền riêng tư
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mt-1">
-                Bản tóm tắt sức khỏe sinh học của Ngọc Phan Châu Anh
+                Bản tóm tắt sức khỏe sinh học của Châu Anh
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl">
                 Phụ huynh nắm bắt kịp thời chất lượng giấc ngủ và nhịp sinh hoạt cân bằng của con để đồng hành nhẹ nhàng, trong khi không gian cảm xúc riêng tư của học sinh vẫn được bảo vệ tuyệt đối.

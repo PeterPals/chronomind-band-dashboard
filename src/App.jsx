@@ -370,9 +370,6 @@ export default function App() {
                 <h1 className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
                   ChronoMind
                 </h1>
-                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  Band · Học đường cân bằng
-                </span>
               </div>
             </div>
 
@@ -413,10 +410,7 @@ export default function App() {
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-bold text-slate-800 dark:text-white truncate">
-                  Ngọc Phan Châu Anh
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                  Lớp 11 Chuyên Toán · Ôn thi HK1
+                  Châu Anh
                 </div>
               </div>
             </div>
@@ -442,7 +436,7 @@ export default function App() {
                       <Activity className="w-5 h-5" />
                     </div>
                     <span className="font-extrabold text-base text-slate-900 dark:text-white">
-                      ChronoMind Band
+                      ChronoMind
                     </span>
                   </div>
                   <button
@@ -478,7 +472,7 @@ export default function App() {
                 </nav>
               </div>
               <div className="text-xs text-slate-400 text-center">
-                Ngọc Phan Châu Anh · Lớp 11 Chuyên Toán
+                Châu Anh
               </div>
             </div>
           </div>
@@ -500,7 +494,7 @@ export default function App() {
 
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-none bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                   <Bluetooth className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">ChronoMind Band S2 ·</span>
+                  <span className="hidden sm:inline">ChronoMind Band ·</span>
                   <span>Đã kết nối</span>
                 </div>
 
@@ -559,7 +553,7 @@ export default function App() {
               <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                    Chào buổi sáng dịu nhẹ, Ngọc Phan Châu Anh 🌿
+                    Chào buổi sáng dịu nhẹ, Châu Anh 🌿
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                     {sleepDeprived
